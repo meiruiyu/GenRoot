@@ -1,0 +1,61 @@
+family_tree_data = {
+    "name": "The Doe Family",
+    "members": [
+        {
+            "id": 1,
+            "name": "John Doe",
+            "relation_type": "Grandfather",
+            "birth_date": "1940-01-01",
+            "photo_url": "https://images.unsplash.com/photo-1583232241079-210ac11b9a79?q=80&w=2592&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+            "parent_id": None,
+        },
+        {
+            "id": 2,
+            "name": "Jane Doe",
+            "relation_type": "Grandmother",
+            "birth_date": "1942-05-10",
+            "photo_url": "https://images.unsplash.com/photo-1618642268273-997f0a1fb8aa?q=80&w=2680&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+            "parent_id": None,
+        },
+        {
+            "id": 3,
+            "name": "Peter Doe",
+            "relation_type": "Father",
+            "birth_date": "1965-08-20",
+            "photo_url": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=2574&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+            "parent_id": 1,
+        },
+        {
+            "id": 4,
+            "name": "Mary Doe",
+            "relation_type": "Mother",
+            "birth_date": "1968-11-30",
+            "photo_url": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=2574&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+            "parent_id": 2,
+        },
+        {
+            "id": 5,
+            "name": "Chris Doe",
+            "relation_type": "Son",
+            "birth_date": "1990-03-15",
+            "photo_url": "https://images.unsplash.com/photo-1552058544-f2b08422138a?q=80&w=2598&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+            "parent_id": 3,
+        },
+    ],
+    "stories": [
+        {
+            "id": 1,
+            "member_id": 1,
+            "title": "The Old Farmhouse",
+            "content": "I remember spending my summers at the old farmhouse. The air was always fresh, and the smell of hay filled the fields. We would wake up at dawn to milk the cows and spend the rest of the day playing in the barn.",
+            "original_language": "en",
+        },
+        {
+            "id": 2,
+            "member_id": 2,
+            "title": "My First Trip to the City",
+            "content": "The first time I saw the city, I was amazed by the tall buildings and the endless stream of cars. It was a completely different world from the quiet countryside I was used to.",
+            "original_language": "en",
+        },
+    ],
+}
