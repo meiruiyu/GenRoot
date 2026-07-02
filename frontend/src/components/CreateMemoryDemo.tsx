@@ -1,7 +1,8 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useLanguage } from "@/lib/i18n/LanguageProvider";
 import { writeRecordContext } from "@/lib/storage";
 
 type IcebreakerState = { questions: string[] } | null;
@@ -16,9 +17,9 @@ type EnrichResult = {
 
 export function CreateMemoryDemo() {
   const router = useRouter();
+  const { t, locale } = useLanguage();
 
-  // Step 1 — ice-breaker state
-  const [prompt, setPrompt] = useState("The old Miao song Grandma Aqiao used to sing while making wax dye");
+  const [prompt, setPrompt] = useState("");
   const [imageBase64, setImageBase64] = useState<string | undefined>(undefined);
   const [mediaPreview, setMediaPreview] = useState<string | undefined>(undefined);
   const [mediaType, setMediaType] = useState<"image" | "video" | undefined>(undefined);
@@ -27,14 +28,20 @@ export function CreateMemoryDemo() {
   const [selectedQuestion, setSelectedQuestion] = useState<string>("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Step 2 — enrichment state
   const [title, setTitle] = useState("");
-  const [memberName, setMemberName] = useState("Grandma Aqiao");
-  const [location, setLocation] = useState("Kaili, Guizhou");
-  const [language, setLanguage] = useState("Miao + Mandarin");
+  const [memberName, setMemberName] = useState("");
+  const [location, setLocation] = useState("");
+  const [language, setLanguage] = useState("");
   const [story, setStory] = useState("");
   const [enrichLoading, setEnrichLoading] = useState(false);
   const [result, setResult] = useState<EnrichResult>(null);
+
+  useEffect(() => {
+    setPrompt(t("create.defaultPrompt"));
+    setMemberName(t("create.defaultMember"));
+    setLocation(t("create.defaultLocation"));
+    setLanguage(t("create.defaultLanguage"));
+  }, [locale, t]);
 
   const handleMediaChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -82,25 +89,22 @@ export function CreateMemoryDemo() {
 
   return (
     <div className="space-y-6">
-      {/* Step 1 — Ice-breaker generation */}
       <div className="glass-panel-strong rounded-[32px] p-8">
-        <p className="text-xs uppercase tracking-[0.28em] text-[var(--muted)]">Step 1 · Memory Trigger</p>
-        <h1 className="mt-2 font-display text-4xl text-[var(--ink)]">
-          Upload a photo or video, or enter a prompt, and AI will generate icebreaker questions.
-        </h1>
+        <p className="text-xs uppercase tracking-[0.28em] text-[var(--muted)]">{t("create.step1Eyebrow")}</p>
+        <h1 className="mt-2 font-display text-4xl text-[var(--ink)]">{t("create.step1Heading")}</h1>
         <div className="mt-6 grid gap-4 md:grid-cols-[1fr_auto]">
           <input
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
             className="glass-input rounded-[22px] px-5 py-4 outline-none"
-            placeholder="For example: Grandma's wax-dyed skirt from a festival in Kaili"
+            placeholder={t("create.promptPlaceholder")}
           />
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
             className="glass-button-secondary rounded-[22px] px-5 py-4 text-sm whitespace-nowrap"
           >
-            {mediaPreview ? "Replace media" : "Upload photo or video"}
+            {mediaPreview ? t("create.replaceMedia") : t("create.uploadMedia")}
           </button>
           <input
             ref={fileInputRef}
@@ -121,16 +125,14 @@ export function CreateMemoryDemo() {
           ) : (
             <img
               src={mediaPreview}
-              alt="Uploaded reference"
+              alt={t("create.uploadedAlt")}
               className="mt-4 h-32 w-auto rounded-[18px] object-cover"
             />
           )
         ) : null}
 
         {mediaType === "video" ? (
-          <p className="mt-3 text-sm leading-6 text-[var(--muted)]">
-            Video is supported for the demo preview and recording flow. Icebreaker generation will rely on your prompt text unless a still image is also provided.
-          </p>
+          <p className="mt-3 text-sm leading-6 text-[var(--muted)]">{t("create.videoNote")}</p>
         ) : null}
 
         <button
@@ -139,7 +141,7 @@ export function CreateMemoryDemo() {
           disabled={icebreakerLoading}
           className="mt-5 glass-button inline-flex rounded-full px-6 py-3 text-sm font-medium disabled:opacity-50"
         >
-          {icebreakerLoading ? "Generating..." : "Generate icebreakers"}
+          {icebreakerLoading ? t("create.generating") : t("create.generateIcebreakers")}
         </button>
 
         {icebreakers ? (
@@ -173,52 +175,49 @@ export function CreateMemoryDemo() {
                 }}
                 className="glass-button rounded-full px-8 py-4 text-base font-medium"
               >
-                Start recording →
+                {t("create.startRecording")}
               </button>
             ) : null}
           </div>
         ) : null}
       </div>
 
-      {/* Step 2 — Enrichment */}
       <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
         <div className="glass-panel-strong rounded-[32px] p-8">
-          <p className="text-xs uppercase tracking-[0.28em] text-[var(--muted)]">Step 2 · Structure the Story</p>
-          <h2 className="mt-2 font-display text-3xl text-[var(--ink)]">
-            Enter the story, then let AI generate summary, tags, and entities.
-          </h2>
+          <p className="text-xs uppercase tracking-[0.28em] text-[var(--muted)]">{t("create.step2Eyebrow")}</p>
+          <h2 className="mt-2 font-display text-3xl text-[var(--ink)]">{t("create.step2Heading")}</h2>
           <div className="mt-6 grid gap-4">
             <input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               className="glass-input rounded-[22px] px-5 py-4 outline-none"
-              placeholder="Title or selected icebreaker question"
+              placeholder={t("create.titlePlaceholder")}
             />
             <div className="grid gap-4 md:grid-cols-2">
               <input
                 value={memberName}
                 onChange={(e) => setMemberName(e.target.value)}
                 className="glass-input rounded-[22px] px-5 py-4 outline-none"
-                placeholder="Related family member"
+                placeholder={t("create.memberPlaceholder")}
               />
               <input
                 value={language}
                 onChange={(e) => setLanguage(e.target.value)}
                 className="glass-input rounded-[22px] px-5 py-4 outline-none"
-                placeholder="Language"
+                placeholder={t("create.languagePlaceholder")}
               />
             </div>
             <input
               value={location}
               onChange={(e) => setLocation(e.target.value)}
               className="glass-input rounded-[22px] px-5 py-4 outline-none"
-              placeholder="Location"
+              placeholder={t("create.locationPlaceholder")}
             />
             <textarea
               value={story}
               onChange={(e) => setStory(e.target.value)}
               className="glass-input min-h-36 resize-none rounded-[22px] px-5 py-4 outline-none"
-              placeholder="Paste a story or transcript here"
+              placeholder={t("create.storyPlaceholder")}
             />
             <button
               type="button"
@@ -226,26 +225,26 @@ export function CreateMemoryDemo() {
               disabled={enrichLoading || !story}
               className="glass-button inline-flex w-fit rounded-full px-6 py-3 text-sm font-medium disabled:opacity-50"
             >
-              {enrichLoading ? "Structuring story..." : "Run AI enrichment"}
+              {enrichLoading ? t("create.structuring") : t("create.runEnrichment")}
             </button>
           </div>
         </div>
 
         <div className="glass-panel rounded-[32px] p-8">
-          <p className="text-xs uppercase tracking-[0.28em] text-[var(--muted)]">AI Output</p>
-          <h2 className="mt-2 font-display text-3xl text-[var(--ink)]">Summary · Tags · Entities</h2>
+          <p className="text-xs uppercase tracking-[0.28em] text-[var(--muted)]">{t("create.outputEyebrow")}</p>
+          <h2 className="mt-2 font-display text-3xl text-[var(--ink)]">{t("create.outputHeading")}</h2>
           {result ? (
             <div className="mt-6 space-y-5 text-sm leading-7 text-[var(--muted)]">
               <div>
-                <p className="font-medium text-[var(--ink)]">Summary</p>
+                <p className="font-medium text-[var(--ink)]">{t("common.summary")}</p>
                 <p>{result.summary}</p>
               </div>
               <div>
-                <p className="font-medium text-[var(--ink)]">Public-safe version</p>
+                <p className="font-medium text-[var(--ink)]">{t("memory.publicSafe")}</p>
                 <p>{result.publicSafeVersion}</p>
               </div>
               <div>
-                <p className="font-medium text-[var(--ink)]">Tags</p>
+                <p className="font-medium text-[var(--ink)]">{t("common.tags")}</p>
                 <div className="mt-2 flex flex-wrap gap-2">
                   {result.tags.map((tag) => (
                     <span key={tag} className="glass-chip rounded-full px-3 py-1 text-xs">
@@ -255,25 +254,21 @@ export function CreateMemoryDemo() {
                 </div>
               </div>
               <div>
-                <p className="font-medium text-[var(--ink)]">Entities</p>
+                <p className="font-medium text-[var(--ink)]">{t("common.entities")}</p>
                 <div className="mt-2 flex flex-wrap gap-2">
-                  {[
-                    ...result.entities.people,
-                    ...result.entities.locations,
-                    ...result.entities.events,
-                  ].map((e) => (
-                    <span key={e} className="glass-chip rounded-full px-3 py-1 text-xs">
-                      {e}
-                    </span>
-                  ))}
+                  {[...result.entities.people, ...result.entities.locations, ...result.entities.events].map(
+                    (e) => (
+                      <span key={e} className="glass-chip rounded-full px-3 py-1 text-xs">
+                        {e}
+                      </span>
+                    ),
+                  )}
                 </div>
               </div>
             </div>
           ) : (
             <p className="mt-6 text-sm leading-7 text-[var(--muted)]">
-              {icebreakers
-                ? "Pick one of the icebreakers as your title, then add the story and run enrichment."
-                : "Start by generating icebreakers above, then add the story."}
+              {icebreakers ? t("create.outputEmptyWithIcebreakers") : t("create.outputEmptyNoIcebreakers")}
             </p>
           )}
         </div>

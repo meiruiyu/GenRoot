@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import mapboxgl, { type GeoJSONSource, type Map as MapboxMap } from "mapbox-gl";
 import { demoArchive } from "@/lib/demo-data";
 import { Pill } from "@/components/Pill";
+import { useLanguage } from "@/lib/i18n/LanguageProvider";
 import type { PublicStory } from "@/lib/types";
 
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN;
@@ -19,11 +20,11 @@ const typeColorExpression = [
 ] as mapboxgl.Expression;
 
 // Preset regions for the region selector
-const REGIONS = [
-  { label: "All", center: [80, 30] as [number, number], zoom: 0.95 },
-  { label: "Guizhou", center: [107.1, 27.0] as [number, number], zoom: 6.5 },
-  { label: "Guangdong", center: [113.26, 23.13] as [number, number], zoom: 6.5 },
-  { label: "New York", center: [-74.006, 40.713] as [number, number], zoom: 9 },
+const REGION_KEYS = [
+  { key: "regionAll", center: [80, 30] as [number, number], zoom: 0.95 },
+  { key: "regionGuizhou", center: [107.1, 27.0] as [number, number], zoom: 6.5 },
+  { key: "regionGuangdong", center: [113.26, 23.13] as [number, number], zoom: 6.5 },
+  { key: "regionNewYork", center: [-74.006, 40.713] as [number, number], zoom: 9 },
 ];
 
 function buildGeoJson(stories: PublicStory[]) {
@@ -56,6 +57,7 @@ interface StoryMapProps {
 }
 
 export function StoryMap({ compact = false, stories }: StoryMapProps) {
+  const { t } = useLanguage();
   const visibleStories = stories ?? demoArchive.publicStories;
 
   const mapRef = useRef<MapboxMap | null>(null);
@@ -202,16 +204,14 @@ export function StoryMap({ compact = false, stories }: StoryMapProps) {
   if (!MAPBOX_TOKEN) {
     return (
       <div className="glass-panel-strong overflow-hidden rounded-[32px] p-8">
-        <p className="text-xs uppercase tracking-[0.28em] text-[var(--muted)]">Mapbox Required</p>
-        <h3 className="mt-3 font-display text-3xl text-[var(--ink)]">
-          Set `NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN` to render the live map.
-        </h3>
+        <p className="text-xs uppercase tracking-[0.28em] text-[var(--muted)]">{t("map.mapboxRequired")}</p>
+        <h3 className="mt-3 font-display text-3xl text-[var(--ink)]">{t("map.mapboxHint")}</h3>
         <div className="mt-6 grid gap-4 md:grid-cols-3">
           {visibleStories.map((story) => (
             <Link key={story.id} href={`/memories/${story.memoryId}`} className="glass-chip rounded-[24px] p-4 transition hover:-translate-y-0.5">
               <div className="mb-3 flex items-center justify-between">
                 <Pill tone="light">{story.region}</Pill>
-                <Pill>{story.type}</Pill>
+                <Pill>{t(`storyTypes.${story.type}`)}</Pill>
               </div>
               <h3 className="font-display text-2xl text-[var(--ink)]">{story.title}</h3>
             </Link>
@@ -233,14 +233,14 @@ export function StoryMap({ compact = false, stories }: StoryMapProps) {
         {/* Region selector */}
         {!compact && (
           <div className="glass-panel rounded-[24px] px-4 py-3 flex flex-wrap gap-2">
-            {REGIONS.map((r) => (
+            {REGION_KEYS.map((r) => (
               <button
-                key={r.label}
+                key={r.key}
                 type="button"
                 onClick={() => mapRef.current?.flyTo({ center: r.center, zoom: r.zoom, duration: 800 })}
                 className="glass-chip rounded-full px-4 py-1.5 text-xs font-medium text-[var(--ink)] transition hover:bg-white/30"
               >
-                {r.label}
+                {t(`map.${r.key}`)}
               </button>
             ))}
           </div>
@@ -250,7 +250,7 @@ export function StoryMap({ compact = false, stories }: StoryMapProps) {
         <div className="flex flex-col gap-3 overflow-y-auto max-h-[520px] pr-0.5">
           {visibleStories.length === 0 ? (
             <div className="glass-panel rounded-[24px] p-6 text-center text-sm text-[var(--muted)]">
-              No stories match the current filters.
+              {t("map.noStories")}
             </div>
           ) : (
             visibleStories.map((story) => {
@@ -263,7 +263,7 @@ export function StoryMap({ compact = false, stories }: StoryMapProps) {
                 >
                   <div className="mb-3 flex items-center justify-between gap-3">
                     <Pill tone="light">{story.region}</Pill>
-                    <Pill>{story.type}</Pill>
+                    <Pill>{t(`storyTypes.${story.type}`)}</Pill>
                   </div>
                   <h3 className="font-display text-2xl text-[var(--ink)]">{story.title}</h3>
                   <p className="mt-2 text-sm leading-6 text-[var(--muted)]">{story.summary}</p>
@@ -281,7 +281,7 @@ export function StoryMap({ compact = false, stories }: StoryMapProps) {
                           <div key={i} className="w-1 rounded-full bg-[var(--accent)]" style={{ height: `${8 + i * 2}px`, animation: "pulse 0.6s ease-in-out infinite", animationDelay: `${i * 0.1}s` }} />
                         ))}
                       </div>
-                      <span>Playing...</span>
+                      <span>{t("map.playing")}</span>
                     </div>
                   )}
 
@@ -292,18 +292,18 @@ export function StoryMap({ compact = false, stories }: StoryMapProps) {
                         onClick={() => { setSelectedId(story.id); }}
                         className="text-xs font-medium text-[var(--ink)]"
                       >
-                        Focus map
+                        {t("map.focusMap")}
                       </button>
                       <button
                         type="button"
                         onClick={() => handlePlay(story.id)}
                         className={`text-xs font-medium ${isPlaying ? "text-[var(--accent)]" : "text-[var(--muted)]"}`}
                       >
-                        {isPlaying ? "⏹ Stop" : "▶ Play"}
+                        {isPlaying ? t("map.stop") : t("map.play")}
                       </button>
                     </div>
                     <Link href={`/memories/${story.memoryId}`} className="text-xs font-medium text-[var(--accent)]">
-                      View source memory
+                      {t("map.viewSource")}
                     </Link>
                   </div>
                 </div>

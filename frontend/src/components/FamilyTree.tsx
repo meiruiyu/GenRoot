@@ -14,6 +14,8 @@ import ReactFlow, {
   type NodeProps,
 } from "reactflow";
 import { demoArchive } from "@/lib/demo-data";
+import { getLocalizedArchive } from "@/lib/i18n/demo-content";
+import { useLanguage } from "@/lib/i18n/LanguageProvider";
 import { Pill } from "@/components/Pill";
 import type { FamilyMember } from "@/lib/types";
 
@@ -29,17 +31,14 @@ const relationEdges: Edge[] = [
 ];
 
 function MemberNode({ data }: NodeProps<{ member: FamilyMember }>) {
+  const { t } = useLanguage();
   const { member } = data;
 
   return (
     <div className="w-[260px] rounded-[28px] glass-panel-strong p-4">
       <Handle type="target" position={Position.Top} className="!h-3 !w-3 !bg-[var(--accent)]" />
       <div className="flex items-center gap-4">
-        <img
-          src={member.avatar}
-          alt={member.name}
-          className="h-16 w-16 rounded-2xl object-cover"
-        />
+        <img src={member.avatar} alt={member.name} className="h-16 w-16 rounded-2xl object-cover" />
         <div>
           <p className="font-display text-2xl text-[var(--ink)]">{member.name}</p>
           <p className="text-sm text-[var(--muted)]">{member.relation}</p>
@@ -48,16 +47,12 @@ function MemberNode({ data }: NodeProps<{ member: FamilyMember }>) {
       <p className="mt-4 text-sm leading-6 text-[var(--muted)]">{member.bio}</p>
       <div className="mt-4 flex flex-wrap gap-2">
         <Pill>{member.generation}</Pill>
-        <Pill tone="light">{member.storyCount} memories</Pill>
+        <Pill tone="light">{t("familyTree.memoriesCount", { count: member.storyCount })}</Pill>
       </div>
       <p className="mt-3 text-xs uppercase tracking-[0.22em] text-[var(--muted)]">
         {member.heritageLanguage}
       </p>
-      <Handle
-        type="source"
-        position={Position.Bottom}
-        className="!h-3 !w-3 !bg-[var(--ink)]"
-      />
+      <Handle type="source" position={Position.Bottom} className="!h-3 !w-3 !bg-[var(--ink)]" />
     </div>
   );
 }
@@ -67,26 +62,24 @@ const nodeTypes = {
 };
 
 export default function FamilyTree() {
+  const { locale, t } = useLanguage();
+  const archive = useMemo(() => getLocalizedArchive(locale, demoArchive), [locale]);
+
   const nodes = useMemo<Node[]>(
     () =>
-      demoArchive.members
+      archive.members
         .filter((member) => member.id === "grandma-aqiao" || member.id === "mia")
         .map((member) => ({
-        id: member.id,
-        type: "member",
-        position: {
-          x:
-            member.id === "grandma-aqiao"
-              ? 18 * 22
-              : 36 * 22,
-          y: member.position.y * 8,
-        },
-        data: {
-          member,
-        },
-        draggable: false,
-      })),
-    [],
+          id: member.id,
+          type: "member",
+          position: {
+            x: member.id === "grandma-aqiao" ? 18 * 22 : 36 * 22,
+            y: member.position.y * 8,
+          },
+          data: { member },
+          draggable: false,
+        })),
+    [archive.members],
   );
 
   return (
@@ -117,26 +110,20 @@ export default function FamilyTree() {
           </ReactFlowProvider>
         </div>
         <div className="border-l border-white/15 bg-[rgba(255,255,255,0.08)] p-6 backdrop-blur-xl">
-          <p className="eyebrow">
-            Tree Detail
-          </p>
-          <h3 className="section-title font-display mt-2 text-[var(--ink)]">
-            This is the relationship map Mia uses to understand where she comes from.
-          </h3>
-          <p className="body-copy mt-3">
-            The tree is intentionally simplified to the two people carrying the strongest emotional weight in the demo: Grandma Aqiao and Mia. It keeps the relationship graphic cleaner while still showing the line between inherited memory and the next generation trying to preserve it.
-          </p>
+          <p className="eyebrow">{t("familyTree.treeDetail")}</p>
+          <h3 className="section-title font-display mt-2 text-[var(--ink)]">{t("familyTree.heading")}</h3>
+          <p className="body-copy mt-3">{t("familyTree.body")}</p>
           <div className="body-copy mt-6 space-y-3">
-            <p>Pan and zoom supported</p>
-            <p>The two nodes keep the visual focus on memory inheritance</p>
-            <p>Mia's archive themes still connect directly to Grandma Aqiao's stories</p>
-            <p>The migration line from Hunan to Kaili remains legible through family memory</p>
+            <p>{t("familyTree.bullet1")}</p>
+            <p>{t("familyTree.bullet2")}</p>
+            <p>{t("familyTree.bullet3")}</p>
+            <p>{t("familyTree.bullet4")}</p>
           </div>
           <Link
             href="/memories/wax-dye-song"
             className="glass-button mt-5 inline-flex rounded-full px-5 py-3 text-sm font-medium"
           >
-            Open Grandma Aqiao's Memory
+            {t("familyTree.openMemory")}
           </Link>
         </div>
       </div>

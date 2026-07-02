@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { ConditionalAppNav } from '@/components/ConditionalAppNav';
+import { Providers } from '@/components/Providers';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import 'reactflow/dist/style.css';
 import './globals.css';
@@ -15,10 +16,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="zh-CN" suppressHydrationWarning>
       <body>
-        <ConditionalAppNav />
-        {children}
+        <Providers>
+          <ConditionalAppNav />
+          {children}
+        </Providers>
       </body>
     </html>
   );

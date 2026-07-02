@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useLanguage } from "@/lib/i18n/LanguageProvider";
 import { clearRecordContext, readRecordContext, saveMemory, type SavedMemory } from "@/lib/storage";
 import { RealtimeAPIClient } from "@/lib/realtime-api";
 
@@ -26,6 +27,7 @@ interface ProcessResult {
 
 export function RecordingStudio() {
   const router = useRouter();
+  const { t } = useLanguage();
   const [question, setQuestion] = useState("");
   const [mediaPreview, setMediaPreview] = useState<string | undefined>(undefined);
   const [mediaType, setMediaType] = useState<"image" | "video" | undefined>(undefined);
@@ -73,17 +75,16 @@ export function RecordingStudio() {
       setMediaPreview(ctx.mediaPreview);
       setMediaType(ctx.mediaType);
     } else {
-      setQuestion("What is the festival from your childhood that you remember most clearly?");
+      setQuestion(t("record.defaultQuestion"));
     }
 
     return () => {
-      // Cleanup
       realtimeAPIRef.current?.disconnect();
       if (streamRef.current) {
         streamRef.current.getTracks().forEach((track) => track.stop());
       }
     };
-  }, []);
+  }, [t]);
 
   // Initialize Web Speech API for real-time transcription (fallback for MiniMax)
   const initializeWebSpeechAPI = (stream: MediaStream) => {
@@ -258,7 +259,7 @@ export function RecordingStudio() {
       liveTranscriptRef.current = "";
     } catch (error) {
       console.error("Recording error:", error);
-      alert("Microphone access is unavailable. Please check your browser permissions.");
+      alert(t("record.micUnavailable"));
       setStatus("idle");
     }
   };
@@ -297,7 +298,7 @@ export function RecordingStudio() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             story: liveTranscript,
-            memberName: "Family member",
+            memberName: t("record.familyMember"),
             location: "Kaili, Guizhou",
           }),
         });
@@ -350,10 +351,10 @@ export function RecordingStudio() {
       console.error("Submission error:", error);
       setSaveError(
         error instanceof TypeError
-          ? "Request failed before the server could respond. Please try a shorter recording or retry once."
+          ? t("record.requestFailed")
           : error instanceof Error
             ? error.message
-            : "Processing failed."
+            : t("record.processingFailed")
       );
       setStatus("preview");
     }
@@ -366,8 +367,10 @@ export function RecordingStudio() {
       const memory: SavedMemory = {
         id: `mem_${Date.now()}`,
         createdAt: new Date().toISOString(),
-        title: `${result.entities.people?.[0] || "Family Member"}'s Story`,
-        memberName: result.entities.people?.[0] || "Family Member",
+        title: t("record.storyTitle", {
+          name: result.entities.people?.[0] || t("record.familyMemberTitle"),
+        }),
+        memberName: result.entities.people?.[0] || t("record.familyMemberTitle"),
         location: result.entities.locations?.[0] || "Kaili, Guizhou",
         language: "Mandarin",
         audioUrl: audioUrl || "", // Keep the blob URL for playback
@@ -386,7 +389,7 @@ export function RecordingStudio() {
       setStatus("done");
     } catch (error) {
       console.error("Save error:", error);
-      setSaveError(error instanceof Error ? error.message : "Save failed.");
+      setSaveError(error instanceof Error ? error.message : t("record.saveFailed"));
     }
   };
 
@@ -395,9 +398,9 @@ export function RecordingStudio() {
     return (
       <div className="flex min-h-[70vh] flex-col items-center justify-center text-center gap-6 px-4">
         <div className="text-6xl">❤️</div>
-        <h1 className="font-display text-5xl text-[var(--ink)]">Story Saved</h1>
+        <h1 className="font-display text-5xl text-[var(--ink)]">{t("record.storySaved")}</h1>
         <p className="max-w-sm text-lg leading-8 text-[var(--muted)]">
-          {result?.summary || "The memory has been organized and saved."}
+          {result?.summary || t("record.savedFallback")}
         </p>
         <div className="flex gap-3">
           <button
@@ -405,7 +408,7 @@ export function RecordingStudio() {
             onClick={() => router.push("/archive")}
             className="glass-button rounded-full px-6 py-3 text-sm font-medium"
           >
-            View Archive
+            {t("record.viewArchive")}
           </button>
           <button
             type="button"
@@ -419,7 +422,7 @@ export function RecordingStudio() {
             }}
             className="glass-button-secondary rounded-full px-6 py-3 text-sm"
           >
-            Record Another
+            {t("record.recordAnother")}
           </button>
         </div>
       </div>
@@ -443,8 +446,8 @@ export function RecordingStudio() {
             />
           ))}
         </div>
-        <p className="font-display text-3xl text-[var(--ink)]">Connecting live transcription...</p>
-        <p className="text-sm text-[var(--muted)]">Opening a realtime connection to the AI service</p>
+        <p className="font-display text-3xl text-[var(--ink)]">{t("record.connecting")}</p>
+        <p className="text-sm text-[var(--muted)]">{t("record.connectingSub")}</p>
       </div>
     );
   }
@@ -466,8 +469,8 @@ export function RecordingStudio() {
             />
           ))}
         </div>
-        <p className="font-display text-3xl text-[var(--ink)]">Structuring the memory...</p>
-        <p className="text-sm text-[var(--muted)]">AI is transcribing the recording and extracting tags</p>
+        <p className="font-display text-3xl text-[var(--ink)]">{t("record.structuring")}</p>
+        <p className="text-sm text-[var(--muted)]">{t("record.structuringSub")}</p>
       </div>
     );
   }
@@ -477,35 +480,35 @@ export function RecordingStudio() {
     return (
       <div className="page-shell space-y-6">
         <div className="glass-panel-strong rounded-[32px] p-8">
-          <p className="text-xs uppercase tracking-[0.28em] text-[var(--muted)]">Step 3 · AI Review</p>
-          <h1 className="mt-4 font-display text-4xl text-[var(--ink)]">Your memory is ready for review</h1>
+          <p className="text-xs uppercase tracking-[0.28em] text-[var(--muted)]">{t("record.reviewEyebrow")}</p>
+          <h1 className="mt-4 font-display text-4xl text-[var(--ink)]">{t("record.reviewHeading")}</h1>
         </div>
 
         {/* Transcript */}
         <div className="glass-panel rounded-[28px] p-6 space-y-3">
-          <p className="text-sm uppercase tracking-[0.2em] text-[var(--muted)]">Transcript</p>
+          <p className="text-sm uppercase tracking-[0.2em] text-[var(--muted)]">{t("common.transcript")}</p>
           <p className="text-base leading-7 text-[var(--ink)]">{result.transcript}</p>
         </div>
 
         {/* Translation */}
         <div className="glass-panel rounded-[28px] p-6 space-y-3">
-          <p className="text-sm uppercase tracking-[0.2em] text-[var(--muted)]">English Translation</p>
+          <p className="text-sm uppercase tracking-[0.2em] text-[var(--muted)]">{t("record.englishTranslation")}</p>
           <p className="text-base leading-7 text-[var(--muted)]">{result.translation}</p>
         </div>
 
         {/* Summary */}
         <div className="glass-panel rounded-[28px] p-6 space-y-3">
-          <p className="text-sm uppercase tracking-[0.2em] text-[var(--muted)]">Summary</p>
+          <p className="text-sm uppercase tracking-[0.2em] text-[var(--muted)]">{t("common.summary")}</p>
           <p className="text-base leading-7 font-medium text-[var(--ink)]">{result.summary}</p>
         </div>
 
         {/* Extracted entities */}
         <div className="glass-panel rounded-[28px] p-6 space-y-4">
-          <p className="text-sm uppercase tracking-[0.2em] text-[var(--muted)]">Extracted Details</p>
+          <p className="text-sm uppercase tracking-[0.2em] text-[var(--muted)]">{t("record.extractedDetails")}</p>
           <div className="grid grid-cols-2 gap-4">
             {result.entities.people.length > 0 && (
               <div>
-                <p className="text-xs text-[var(--muted)] mb-2">👤 People</p>
+                <p className="text-xs text-[var(--muted)] mb-2">{t("record.people")}</p>
                 <div className="flex flex-wrap gap-2">
                   {result.entities.people.map((p) => (
                     <span key={p} className="glass-chip rounded-full px-3 py-1 text-xs">
@@ -517,7 +520,7 @@ export function RecordingStudio() {
             )}
             {result.entities.locations.length > 0 && (
               <div>
-                <p className="text-xs text-[var(--muted)] mb-2">📍 Places</p>
+                <p className="text-xs text-[var(--muted)] mb-2">{t("record.places")}</p>
                 <div className="flex flex-wrap gap-2">
                   {result.entities.locations.map((l) => (
                     <span key={l} className="glass-chip rounded-full px-3 py-1 text-xs">
@@ -529,7 +532,7 @@ export function RecordingStudio() {
             )}
             {result.entities.years.length > 0 && (
               <div>
-                <p className="text-xs text-[var(--muted)] mb-2">📅 Years</p>
+                <p className="text-xs text-[var(--muted)] mb-2">{t("record.years")}</p>
                 <div className="flex flex-wrap gap-2">
                   {result.entities.years.map((y) => (
                     <span key={y} className="glass-chip rounded-full px-3 py-1 text-xs">
@@ -541,7 +544,7 @@ export function RecordingStudio() {
             )}
             {result.entities.events.length > 0 && (
               <div>
-                <p className="text-xs text-[var(--muted)] mb-2">🎭 Events</p>
+                <p className="text-xs text-[var(--muted)] mb-2">{t("record.events")}</p>
                 <div className="flex flex-wrap gap-2">
                   {result.entities.events.map((e) => (
                     <span key={e} className="glass-chip rounded-full px-3 py-1 text-xs">
@@ -556,7 +559,7 @@ export function RecordingStudio() {
 
         {/* Public safe version */}
         <div className="glass-panel rounded-[28px] p-6 space-y-3">
-          <p className="text-sm uppercase tracking-[0.2em] text-[var(--muted)]">📢 Public-safe Version</p>
+          <p className="text-sm uppercase tracking-[0.2em] text-[var(--muted)]">{t("record.publicSafeVersion")}</p>
           <p className="text-sm leading-6 text-[var(--muted)]">{result.publicSafeVersion}</p>
         </div>
 
@@ -577,14 +580,14 @@ export function RecordingStudio() {
             }}
             className="glass-button-secondary rounded-full px-6 py-3 text-sm"
           >
-            Back to Recording
+            {t("record.backToRecording")}
           </button>
           <button
             type="button"
             onClick={saveToArchive}
             className="glass-button rounded-full px-6 py-3 text-sm font-medium flex-1"
           >
-            Save to Archive
+            {t("record.saveToArchive")}
           </button>
         </div>
       </div>
@@ -614,7 +617,7 @@ export function RecordingStudio() {
             ) : (
               <img
                 src={mediaPreview}
-                alt="Memory reference"
+                alt={t("record.memoryRefAlt")}
                 className="h-40 w-auto rounded-[22px] object-cover shadow-lg"
               />
             )
@@ -628,7 +631,7 @@ export function RecordingStudio() {
             className="font-display text-[var(--ink)] leading-snug max-w-lg"
             style={{ fontSize: "clamp(1.75rem, 4vw, 2.5rem)" }}
           >
-            {question || "Loading prompt..."}
+            {question || t("record.loadingPrompt")}
           </h1>
 
           {status === "recording" ? (
@@ -656,7 +659,7 @@ export function RecordingStudio() {
               type="button"
               onClick={startRecording}
               className="h-24 w-24 rounded-full glass-button flex items-center justify-center text-4xl shadow-2xl active:scale-95 transition-transform"
-              aria-label="Start recording"
+              aria-label={t("record.startRecordingAria")}
             >
               🎙
             </button>
@@ -667,32 +670,32 @@ export function RecordingStudio() {
               type="button"
               onClick={stopRecording}
               className="h-24 w-24 rounded-full bg-red-500/80 backdrop-blur border border-red-400/40 flex items-center justify-center text-4xl shadow-2xl active:scale-95 transition-transform"
-              aria-label="Stop recording"
+              aria-label={t("record.stopRecordingAria")}
             >
               ⏹
             </button>
           ) : null}
 
           {status === "idle" && (
-            <p className="text-sm text-[var(--muted)]">Tap to start recording</p>
+            <p className="text-sm text-[var(--muted)]">{t("record.tapToRecord")}</p>
           )}
           {status === "recording" && (
             <div className="max-w-md space-y-3">
               <p className="text-sm text-[var(--muted)] text-center">
-                🎙️ Recording...
+                {t("record.recordingLabel")}
               </p>
               {/* Show live transcript from Web Speech API or Realtime API */}
               {liveTranscript && (
                 <div className="glass-panel rounded-[16px] p-4 bg-white/5 max-h-40 overflow-y-auto animate-pulse">
                   <p className="text-xs uppercase tracking-[0.2em] text-[var(--accent)] mb-2">
-                    ✓ Live Transcript
+                    {t("record.liveTranscript")}
                   </p>
                   <p className="text-sm text-[var(--ink)] leading-6 whitespace-pre-wrap">{liveTranscript}</p>
                 </div>
               )}
               {!liveTranscript && (
                 <p className="text-xs text-[var(--muted)] text-center mt-3 italic">
-                  Listening for your voice...
+                  {t("record.listening")}
                 </p>
               )}
             </div>
@@ -701,16 +704,16 @@ export function RecordingStudio() {
           {status === "preview" && audioUrl ? (
             <div className="glass-panel-strong rounded-[28px] p-6 w-full max-w-md space-y-4 text-center">
               <p className="text-sm uppercase tracking-[0.28em] text-[var(--muted)]">
-                Step 2 · Recording Preview
+                {t("record.previewEyebrow")}
               </p>
               {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
               <audio controls src={audioUrl} className="w-full rounded-[12px]" />
-              <p className="text-xs text-[var(--muted)]">Duration: {duration}</p>
+              <p className="text-xs text-[var(--muted)]">{t("record.duration", { duration })}</p>
               {saveError && <p className="text-xs text-red-500">{saveError}</p>}
               {/* Show live transcript if available */}
               {liveTranscript && (
                 <div className="glass-panel rounded-[12px] p-3 bg-white/5 max-h-20 overflow-y-auto text-left">
-                  <p className="text-xs uppercase text-[var(--muted)] mb-1">Live transcript</p>
+                  <p className="text-xs uppercase text-[var(--muted)] mb-1">{t("record.liveTranscriptLabel")}</p>
                   <p className="text-xs text-[var(--ink)]">{liveTranscript}</p>
                 </div>
               )}
@@ -727,14 +730,14 @@ export function RecordingStudio() {
                   }}
                   className="glass-button-secondary rounded-full px-5 py-3 text-sm flex-1"
                 >
-                  Record Again
+                  {t("record.recordAgain")}
                 </button>
                 <button
                   type="button"
                   onClick={submitRecording}
                   className="glass-button rounded-full px-6 py-3 text-sm font-medium flex-1"
                 >
-                  {isRealtimeConnected && result ? "Continue" : "Process with AI"}
+                  {isRealtimeConnected && result ? t("common.continue") : t("record.processWithAI")}
                 </button>
               </div>
             </div>
